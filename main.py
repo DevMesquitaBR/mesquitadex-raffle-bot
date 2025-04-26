@@ -35,7 +35,7 @@ async def raffle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     winners_count = 5  # Número de ganhadores
     winners = random.sample(list(participants.keys()), min(winners_count, len(participants)))
 
-    winners_text = "OS GANHADORES DAS BANCAS SÃO 🎉🔥:
+    winners_text = "OS GANHADORES DAS BANCAS SÃO 🎉🔥:\n\n"
 
 "
     for winner_id in winners:
