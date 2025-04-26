@@ -7,13 +7,11 @@ import os
 
 TOKEN = os.getenv("BOT_TOKEN")
 
-# Configura o log
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 
 participants = {}
 message_id_store = {"chat_id": None, "message_id": None}
 
-# Configurações avançadas
 settings = {
     "subscribe_channels": [],
     "raffle_message": None,
@@ -131,35 +129,21 @@ async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("✅ Lista de participantes resetada com sucesso!")
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    help_text = (
-        "📋 *Comandos Disponíveis:*
+    help_text = """📋 *Comandos Disponíveis:*
 
-"
-        "/start ou /randy - Iniciar um sorteio
-"
-        "/participants - Ver participantes
-"
-        "/raffle [quantidade] - Sortear participantes
-"
-        "/subscribe @canal1 - Definir canal obrigatório
-"
-        "/nosubscribe - Liberar inscrição
-"
-        "/raffleMessage [texto] - Customizar mensagem do sorteio
-"
-        "/noRaffleMessage - Usar mensagem padrão
-"
-        "/winnerMessage [texto] - Customizar mensagem dos ganhadores
-"
-        "/noWinnerMessage - Usar mensagem padrão de ganhadores
-"
-        "/nodelete - Não apagar mensagem após sorteio
-"
-        "/reset - Resetar participantes
-"
-        "/help - Mostrar ajuda
-"
-    )
+/start ou /randy - Iniciar um sorteio
+/participants - Ver participantes
+/raffle [quantidade] - Sortear participantes
+/subscribe @canal1 - Definir canal obrigatório
+/nosubscribe - Liberar inscrição
+/raffleMessage [texto] - Customizar mensagem do sorteio
+/noRaffleMessage - Usar mensagem padrão
+/winnerMessage [texto] - Customizar mensagem dos ganhadores
+/noWinnerMessage - Usar mensagem padrão de ganhadores
+/nodelete - Não apagar mensagem após sorteio
+/reset - Resetar participantes
+/help - Mostrar ajuda
+"""
     await update.message.reply_text(help_text, parse_mode='Markdown')
 
 async def subscribe(update: Update, context: ContextTypes.DEFAULT_TYPE):
