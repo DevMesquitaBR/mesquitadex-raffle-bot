@@ -1,3 +1,4 @@
+
 import logging
 import random
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
@@ -6,76 +7,59 @@ import os
 
 # Pegando o token do ambiente Railway
 TOKEN = os.getenv("BOT_TOKEN")
-participants = set()
+
+# Mudança: Agora um dicionário para armazenar {user_id: (username, first_name)}
+participants = {}
+
 message_id_store = {}
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [[InlineKeyboardButton("🎉 Participar", callback_data="join_raffle")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text("Clique no botão para participar do sorteio! 🎲", reply_markup=reply_markup)
 
-    message = await update.message.reply_text(
-        f"""🎉 Sorteio Aberto! 🎉
-Já temos {len(participants)} participando!
-Clique no botão Participar para entrar! 🚀
-🔗 Cadastre-se também aqui: https://bit.ly/42puLF6
-Boa sorte! 🍀""",
-        reply_markup=reply_markup
-    )
-    message_id_store[update.effective_chat.id] = message.message_id
-
-async def join_raffle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    user = query.from_user.username or query.from_user.first_name
-    participants.add(user)
+    await query.answer()
 
-    chat_id = query.message.chat_id
-    msg_id = message_id_store.get(chat_id)
+    if query.data == "join_raffle":
+        user = query.from_user
+        participants[user.id] = (user.username, user.first_name)
+        await query.edit_message_text(text="Você entrou no sorteio! Boa sorte! 🍀")
 
-    if msg_id:
-        keyboard = [[InlineKeyboardButton("🎉 Participar", callback_data="join_raffle")]]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        try:
-            await context.bot.edit_message_text(
-                chat_id=chat_id,
-                message_id=msg_id,
-                text=f"""🎉 Sorteio Aberto! 🎉
-Já temos {len(participants)} participando!
-Clique no botão Participar para entrar! 🚀
-🔗 Cadastre-se também aqui: https://bit.ly/42puLF6
-Boa sorte! 🍀""",
-                reply_markup=reply_markup
-            )
-        except:
-            pass
-
-    await query.answer(
-        text=f"""🎉 Você entrou no sorteio!
-Já temos {len(participants)} participantes.""",
-        show_alert=True
-    )
-
-async def sortear(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def raffle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not participants:
-        await update.message.reply_text("❌ Nenhum participante no sorteio.")
+        await update.message.reply_text("Nenhum participante registrado ainda.")
         return
 
-    count = int(context.args[0]) if context.args else 1
-    selected = random.sample(list(participants), min(count, len(participants)))
-    winners_formatted = ', '.join(selected)
-    await update.message.reply_text(
-        f"""🏆 Parabéns, {winners_formatted}!
-Você foi o grande vencedor entre {len(participants)} participantes! 🎉
-Entre em contato com a equipe para resgatar seu prêmio.
-🔗 Ainda não participou? Cadastre-se aqui: https://bit.ly/42puLF6
-Fique ligado nos próximos sorteios! 🍀"""
-    )
-    participants.clear()
-    message_id_store.pop(update.effective_chat.id, None)
+    winners_count = 5  # Número de ganhadores
+    winners = random.sample(list(participants.keys()), min(winners_count, len(participants)))
 
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    winners_text = "OS GANHADORES DAS BANCAS SÃO 🎉🔥:
+
+"
+    for winner_id in winners:
+        username, first_name = participants[winner_id]
+        if username:
+            winners_text += f"@{username}, "
+        else:
+            winners_text += f"[{first_name}](tg://user?id={winner_id}), "
+
+    winners_text = winners_text.rstrip(", ")  # Remove a última vírgula
+    winners_text += f"
+
+O número de participantes neste sorteio foi {len(participants)} pessoas 🌎"
+
+    await update.message.reply_text(winners_text, parse_mode='Markdown')
+
+def main():
     app = ApplicationBuilder().token(TOKEN).build()
+
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(CallbackQueryHandler(join_raffle_callback, pattern="join_raffle"))
-    app.add_handler(CommandHandler("sortear", sortear))
+    app.add_handler(CallbackQueryHandler(button))
+    app.add_handler(CommandHandler("raffle", raffle))
+
     app.run_polling()
+
+if __name__ == '__main__':
+    main()
